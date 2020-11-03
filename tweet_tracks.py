@@ -40,7 +40,6 @@ class TweetTracks:
     for i, item in enumerate(results['items']):
       name = item['name']
       artist = item['artists'][0]['name']
-      # print(artist)
       msg = msg + str(i+1) + ". " + name + " by " + artist + "\n"
     msg = msg + "Listen here: " + self.fetch_playlist_url("Top Songs For " + self.months[self.last_month] + " " + str(self.current_year)) + "\n"
     self.tweetify(msg)    
@@ -69,9 +68,8 @@ class TweetTracks:
   def tweetify(self, msg):
     tw = Twython(self.keys['API_KEY'], self.keys['SECRET_KEY'], self.keys['OAUTH_TOKEN'], self.keys['OAUTH_TOKEN_SECRET'])
     tw.update_status(status=msg)
-    print("Tweeted message " + msg)
+    print("Tweeted message:\n" + msg)
 
-# ts = TweetTracks()
-# ts.create_playlist()
-# ts.tweet_top_tracks()
-print("boop")
+ts = TweetTracks()
+ts.create_playlist()
+ts.tweet_top_tracks()
