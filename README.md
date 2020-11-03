@@ -21,7 +21,22 @@ Follow the 3 steps in [this guide](https://developer.spotify.com/documentation/g
 4. Generate an access token and secret token
 
 ## 4. Populate JSON
-Edit the `keys.json` file, add the keys to all of the attributes.
+Create a file called `keys.json` file with the following attributes:
+```json
+{
+  "API_KEY": "",
+  "SECRET_KEY": "",
+  "BEARER_TOKEN": "",
+  "OAUTH_TOKEN": "",
+  "OAUTH_TOKEN_SECRET": "",
+  "CLIENT_ID": "",
+  "SECRET_ID": "",
+  "REDIRECT_URL": ""
+
+}
+```
+
+, add the keys to all of the attributes.
 |JSON Attribute|Key|
 |--------------|---|
 |API_KEY|Twitter API key|
