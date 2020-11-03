@@ -35,8 +35,7 @@ Create a file called `keys.json` file with the following attributes:
 
 }
 ```
-
-, add the keys to all of the attributes.
+Add the keys to all of the attributes.
 |JSON Attribute|Key|
 |--------------|---|
 |API_KEY|Twitter API key|
