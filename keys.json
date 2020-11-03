@@ -1,0 +1,11 @@
+{
+  "API_KEY": "",
+  "SECRET_KEY": "",
+  "BEARER_TOKEN": "",
+  "OAUTH_TOKEN": "",
+  "OAUTH_TOKEN_SECRET": "",
+  "CLIENT_ID": "",
+  "SECRET_ID": "",
+  "REDIRECT_URL": "https://kufa.io"
+
+}
