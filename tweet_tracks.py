@@ -11,7 +11,6 @@ def get_keys():
     data = file.read()
   return json.loads(data)
 def get_dates(): 
-  months = ["January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
   last_month = datetime.today().month-2
   if(last_month == 0):
     year = datetime.today().year-1
@@ -21,8 +20,9 @@ def get_dates():
 
 class TweetTracks:
   def __init__(self):
+    self.months = ["January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     self.keys = get_keys()
-    self.last_month,self.year = get_dates()
+    self.last_month,self.current_year = get_dates()
     self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=self.keys['CLIENT_ID'],
                                               client_secret=self.keys['SECRET_ID'],
                                               redirect_uri=self.keys['REDIRECT_URL'],
@@ -34,15 +34,42 @@ class TweetTracks:
     self.sp.user_playlist_create(self.user_id,playlist_name)
     self.add_songs(playlist_name)
 
-  def tweet_top_songs(self):
+  # Creates array of msg lines, and condenses said array into a new subarray that consists of tweets that are <= 280 characters
+  def make_tweet_msgs(self):
     results = self.fetch_top_songs()
-    msg = "My top songs for " + self.months[self.last_month] + ":\n"
+    msg = ["My top songs for " + self.months[self.last_month] + ":"]
     for i, item in enumerate(results['items']):
       name = item['name']
       artist = item['artists'][0]['name']
-      msg = msg + str(i+1) + ". " + name + " by " + artist + "\n"
-    msg = msg + "Listen here: " + self.fetch_playlist_url("Top Songs For " + self.months[self.last_month] + " " + str(self.current_year)) + "\n"
-    self.tweetify(msg)    
+      msg.append(str(i+1) + ". " + name + " by " + artist)
+    msg.append("Listen here: " + self.fetch_playlist_url("Top Songs For " + self.months[self.last_month] + " " + str(self.current_year)))
+    return(self.split_tweets(msg))
+
+  # If msg from make_tweets is above 280 characters, split off lines from the end into multiple tweets
+  def split_tweets(self, msg):
+    tweet_len = 0
+    tweets = []
+    tweet_msg = ""
+    i = 0
+    while(i < len(msg)):
+      if(tweet_len + len(msg[i]) <= 280):
+        tweet_len += len(msg[i])
+        tweet_msg = tweet_msg + (msg[i] + "\n")
+        i += 1
+      else:
+        tweets.append(tweet_msg)
+        tweet_len = 0
+        tweet_msg = ""
+    tweets.append(tweet_msg)
+    return tweets
+
+  def tweet_top_tracks(self,debug=False, msg=[]):
+    tweets = self.make_tweet_msgs()
+    if debug:
+      tweets = msg
+    curr_tweet = self.tweetify(tweets[0]) # Always tweet 1st entry
+    for tw in tweets[1:]:
+      curr_tweet = self.tweetify(tw, is_reply=True, twitter_id=curr_tweet['id'])
   
   def fetch_top_songs(self):
     return self.sp.current_user_top_tracks(limit=5,offset=0,time_range='short_term')
@@ -65,11 +92,17 @@ class TweetTracks:
         result = pl['external_urls']
         return result['spotify']
   
-  def tweetify(self, msg):
+  def tweetify(self, msg, is_reply=False, twitter_id=''):
     tw = Twython(self.keys['API_KEY'], self.keys['SECRET_KEY'], self.keys['OAUTH_TOKEN'], self.keys['OAUTH_TOKEN_SECRET'])
-    tw.update_status(status=msg)
+    if is_reply:
+      tweet = tw.update_status(status=msg, in_reply_to_status_id=twitter_id)
+    else:
+      tweet = tw.update_status(status=msg)
     print("Tweeted message:\n" + msg)
+    return tweet
 
 ts = TweetTracks()
 ts.create_playlist()
+ts.make_tweet_msgs()
 ts.tweet_top_tracks()
+
