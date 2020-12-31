@@ -28,11 +28,6 @@ class TweetTracks:
                                               redirect_uri=self.keys['REDIRECT_URL'],
                                               scope='user-top-read playlist-modify-public'))
     self.user_id = self.sp.current_user()['id']
-    # Run script
-    if self.create_playlist():
-      self.tweet_top_tracks()
-    else:
-      print("An error occured. The playlist already exists.")
 
   # Create playlist, return True if successfully made
   def create_playlist(self):
@@ -52,8 +47,8 @@ class TweetTracks:
     return False
 
   # Creates array of msg lines, and condenses said array into a new subarray that consists of tweets that are <= 280 characters
-  def make_tweet_msgs(self):
-    results = self.fetch_top_songs()
+  def make_tweet_msgs(self,limit=5,range='short_term'):
+    results = self.fetch_top_songs(limit,range)
     msg = ["My top songs for " + self.months[self.last_month] + ":"]
     for i, item in enumerate(results['items']):
       name = item['name']
@@ -88,8 +83,8 @@ class TweetTracks:
     for tw in tweets[1:]:
       curr_tweet = self.tweetify(tw, is_reply=True, twitter_id=curr_tweet['id'])
   
-  def fetch_top_songs(self):
-    return self.sp.current_user_top_tracks(limit=5,offset=0,time_range='short_term')
+  def fetch_top_songs(self,song_no,range):
+    return self.sp.current_user_top_tracks(limit=song_no,offset=0,time_range=range)
 
   # Fetch top songs and insert them into given playlist
   def add_songs(self, playlist):
@@ -120,6 +115,14 @@ class TweetTracks:
   
 
 ts = TweetTracks()
-# ts.create_playlist()
-# ts.tweet_top_tracks()
 
+# print("Current top songs:")
+# msgs = ts.make_tweet_msgs(5,'medium_term')
+# for msg in msgs:
+#   print(msg)
+
+# Run script
+if ts.create_playlist():
+  ts.tweet_top_tracks()
+else:
+  print("An error occured. The playlist already exists.")
