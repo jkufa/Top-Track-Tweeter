@@ -11,8 +11,8 @@ def get_keys():
     data = file.read()
   return json.loads(data)
 def get_dates(): 
-  last_month = datetime.today().month-2
-  if(last_month == 0):
+  last_month = datetime.today().month-2 # -2 because datetime.today().month is not 0 index
+  if(last_month == -1):
     year = datetime.today().year-1
   else:
     year = datetime.today().year
@@ -34,9 +34,8 @@ class TweetTracks:
     playlist_name = "Top Songs For " + self.months[self.last_month] + " " + str(self.current_year)
     if not self.does_playlist_exist(playlist_name):
       self.sp.user_playlist_create(self.user_id,playlist_name)
-      self.add_songs(playlist_name)
-      return True
-    return False
+      return playlist_name
+    return None
 
   # Make sure playlist that is about to be made doesn't already exist
   def does_playlist_exist(self,playlist_name):
@@ -83,13 +82,12 @@ class TweetTracks:
     for tw in tweets[1:]:
       curr_tweet = self.tweetify(tw, is_reply=True, twitter_id=curr_tweet['id'])
   
-  def fetch_top_songs(self,song_no,range):
+  def fetch_top_songs(self,song_no=5,range='short_term'):
     return self.sp.current_user_top_tracks(limit=song_no,offset=0,time_range=range)
 
   # Fetch top songs and insert them into given playlist
-  def add_songs(self, playlist):
+  def add_songs(self, playlist, tracks):
     playlists = self.sp.current_user_playlists()
-    tracks = self.fetch_top_songs()
     track_list = []
     for t in tracks['items']:
       track_list.append(t['id'])
@@ -99,7 +97,7 @@ class TweetTracks:
   
   def fetch_playlist_url(self, playlist_name):
     playlists = self.sp.current_user_playlists()
-    for pl in playlists['items']:
+    for pl in playlists['items']: 
       if(pl['name'] == playlist_name):
         result = pl['external_urls']
         return result['spotify']
@@ -122,7 +120,10 @@ ts = TweetTracks()
 #   print(msg)
 
 # Run script
-if ts.create_playlist():
+pname = ts.create_playlist()
+if pname != None:
+  tracks = ts.fetch_top_songs()
+  ts.add_songs(pname,tracks)
   ts.tweet_top_tracks()
 else:
   print("An error occured. The playlist already exists.")
