@@ -47,12 +47,15 @@ class TweetTracks:
 
   # Creates array of msg lines, and condenses said array into a new subarray that consists of tweets that are <= 280 characters
   def make_tweet_msgs(self,limit=5,range='short_term'):
-    results = self.fetch_top_songs(limit,range)
+    tracks = self.fetch_top_songs(10,range) # Always fetch 10 songs in case a song is removed
     msg = ["My top songs for " + self.months[self.last_month] + ":"]
-    for i, item in enumerate(results['items']):
-      name = item['name']
-      artist = item['artists'][0]['name']
-      msg.append(str(i+1) + ". " + name + " by " + artist)
+    i = 1
+    for t in tracks:
+      name = t['name']
+      artist = t['artists'][0]['name']
+      if name != '' and artist != '' and i <= limit:
+        msg.append(str(i) + ". " + name + " by " + artist)
+        i += 1
     msg.append("Listen here: " + self.fetch_playlist_url("Top Songs For " + self.months[self.last_month] + " " + str(self.current_year)))
     return(self.split_tweets(msg))
 
@@ -83,13 +86,22 @@ class TweetTracks:
       curr_tweet = self.tweetify(tw, is_reply=True, twitter_id=curr_tweet['id'])
   
   def fetch_top_songs(self,song_no=5,range='short_term'):
-    return self.sp.current_user_top_tracks(limit=song_no,offset=0,time_range=range)
+    tracks = self.sp.current_user_top_tracks(limit=10,offset=0,time_range=range)
+    valid_tracks = []
+    i = 0
+    for track in tracks['items']:
+      name = track['name']
+      artist = track['artists'][0]['name']
+      if name != '' and artist != '' and i < song_no:
+        valid_tracks.append(track)
+        i += 1
+    return valid_tracks
 
   # Fetch top songs and insert them into given playlist
   def add_songs(self, playlist, tracks):
     playlists = self.sp.current_user_playlists()
     track_list = []
-    for t in tracks['items']:
+    for t in tracks:
       track_list.append(t['id'])
     for pl in playlists['items']:
       if(pl['name'] == playlist):
@@ -114,16 +126,15 @@ class TweetTracks:
 
 ts = TweetTracks()
 
-# print("Current top songs:")
-# msgs = ts.make_tweet_msgs(5,'medium_term')
-# for msg in msgs:
-#   print(msg)
-
 # Run script
 pname = ts.create_playlist()
 if pname != None:
   tracks = ts.fetch_top_songs()
   ts.add_songs(pname,tracks)
-  ts.tweet_top_tracks()
+  # ts.tweet_top_tracks()
 else:
   print("An error occured. The playlist already exists.")
+  print("Current top songs:")
+  msgs = ts.make_tweet_msgs(10,'short_term')
+  for msg in msgs:
+    print(msg)
