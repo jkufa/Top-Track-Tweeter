@@ -131,7 +131,7 @@ pname = ts.create_playlist()
 if pname != None:
   tracks = ts.fetch_top_songs()
   ts.add_songs(pname,tracks)
-  # ts.tweet_top_tracks()
+  ts.tweet_top_tracks()
 else:
   print("An error occured. The playlist already exists.")
   print("Current top songs:")
